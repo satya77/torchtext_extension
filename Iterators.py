@@ -28,9 +28,7 @@ class BPTTIterator_CHAR(data.BPTTIterator):
                     batch_text = data[i:i + seq_len * self.batch_size].view(self.batch_size, self.token_len, -1).contiguous()
                     batch_target = data[i + 1:i + 1 + seq_len * self.batch_size].view(self.batch_size, self.token_len,
                                                                                       -1).contiguous()
-                if TEXT.batch_first:
-                    batch_text = batch_text.contiguous()
-                    batch_target = batch_target.contiguous()
+
                 yield torchtext.data.Batch.fromvars(
                     dataset, self.batch_size,
                     text=batch_text,
@@ -49,9 +47,6 @@ class BPTTIterator_WORD(data.BPTTIterator):
         text = text + ([TEXT.pad_token] * int(math.ceil(len(text) / self.batch_size)
                                               * self.batch_size - len(text)))
         data = TEXT.numericalize([text], device=self.device)
-        # print(data.shape)
-        # data = data.view(self.batch_size,-1).contiguous()
-        # print(data.shape)
         dataset = torchtext.data.Dataset(examples=self.dataset.examples, fields=[('text', TEXT), ('target', TEXT)])
         TEXT.batch_first = True
         while True:
@@ -59,12 +54,9 @@ class BPTTIterator_WORD(data.BPTTIterator):
                 self.iterations += 1
                 seq_len = self.bptt_len
                 if i + 1 + seq_len * self.batch_size <= len(data):
-                    batch_text = data[i:i + seq_len * self.batch_size].view(self.batch_size, -1).t().contiguous()
+                    batch_text = data[i:i + seq_len * self.batch_size].view(self.batch_size, -1).contiguous()
                     batch_target = data[i + 1:i + 1 + seq_len * self.batch_size].view(self.batch_size,
-                                                                                      -1).t().contiguous()
-                if TEXT.batch_first:
-                    batch_text = batch_text.t().contiguous()
-                    batch_target = batch_target.t().contiguous()
+                                                                                      -1).contiguous()
                 yield torchtext.data.Batch.fromvars(
                     dataset, self.batch_size,
                     text=batch_text,
